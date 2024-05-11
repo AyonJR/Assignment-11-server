@@ -45,8 +45,16 @@ async function run() {
     res.send(result)
   })
 
+  //details 
+  app.get('/query/:id' , async(req,res)=> {
+    const id = req.params.id 
+    const query = {_id : new ObjectId(id)}
+    const result = await queryCollection.findOne(query)
+    res.send(result)
+  })
 
 
+f
 // adding products 
 
  app.post('/queries' , async(req , res) => {
@@ -54,6 +62,9 @@ async function run() {
     const result = await queryCollection.insertOne(productsInfo)
     res.send(result)
 }) 
+
+ //update
+
 
  //delete myQuery 
 
@@ -63,6 +74,9 @@ async function run() {
     const result = await queryCollection.deleteOne(query)
     res.send(result)
  })
+
+
+
 
 
 
