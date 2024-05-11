@@ -25,7 +25,39 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    // await client.connect();
+    // await client.connect();\
+ 
+  const queryCollection = client.db('addQueries').collection('queries')
+
+
+  //allQuery data
+  app.get('/queries' , async (req , res )=> {
+    const result = await queryCollection.find().sort({_id:-1}).toArray()
+    res.send(result)
+  })
+
+ 
+  //query for user 
+  app.get('/queries/:email' , async(req,res)=> {
+    const email = req.params.email
+    const query = {userEmail : email}
+    const result = await queryCollection.find(query).sort({_id:-1}).toArray()
+    res.send(result)
+  })
+
+
+
+// adding products 
+
+ app.post('/queries' , async(req , res) => {
+    const productsInfo = req.body 
+    const result = await queryCollection.insertOne(productsInfo)
+    res.send(result)
+
+ })
+
+
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
