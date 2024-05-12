@@ -63,6 +63,14 @@ app.get('/recommendations/:email' , async(req,res)=> {
   res.send(result)
 })
 
+//Recommendations for me
+
+app.get('/recommendation/:email' , async(req,res)=> {
+  const email = req.params.email
+  const query = {userEmail : email}
+  const result = await recommendCollection.find(query).sort({_id:-1}).toArray()
+  res.send(result)
+})
 
 
 // adding products 
