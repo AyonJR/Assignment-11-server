@@ -54,6 +54,15 @@ async function run() {
     res.send(result)
   })
 
+//My recommendations 
+
+app.get('/recommendations/:email' , async(req,res)=> {
+  const email = req.params.email
+  const query = {loggedInUserEmail : email}
+  const result = await recommendCollection.find(query).sort({_id:-1}).toArray()
+  res.send(result)
+})
+
 
 
 // adding products 
