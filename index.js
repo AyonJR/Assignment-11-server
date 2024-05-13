@@ -53,6 +53,16 @@ async function run() {
 
 
 
+ //homepage cards 
+
+ app.get('/queries' , async (req , res )=> {
+  const result = await queryCollection.find().sort({_id:-1}).toArray()
+  res.send(result)
+})
+
+
+
+
   //allQuery data
   app.get('/queries' , async (req , res )=> {
     const result = await queryCollection.find().sort({_id:-1}).toArray()
@@ -93,6 +103,41 @@ app.get('/recommendation/:email' , async(req,res)=> {
   const result = await recommendCollection.find(query).sort({_id:-1}).toArray()
   res.send(result)
 })
+
+ // get operation for update
+ app.get('/queryUpdate/:id' , async(req,res)=> {
+  const id = req.params.id 
+  const query = {_id : new ObjectId(id)}
+  const result = await queryCollection.findOne(query)
+  res.send(result)
+})
+
+
+//PUT operation for update
+
+app.put('/queries/:id' , async(req , res)=> {
+  const id = req.params.id
+  const filter = { _id : new ObjectId(id)}
+  const options = { upsert : true}
+  const updatedQuery = req.body
+  const newQuery = {
+     $set: {
+ 
+      productName : updatedQuery.productName , 
+      productBrand : updatedQuery.productBrand , 
+      imageUrl : updatedQuery.imageUrl , 
+      queryTitle : updatedQuery.queryTitle , 
+      boycottingReason : updatedQuery.boycottingReason , 
+    }
+  }
+
+  const result = await queryCollection.updateOne(filter , newQuery , options)
+  res.send(result)
+})
+
+
+
+
 
 
 // adding products 
