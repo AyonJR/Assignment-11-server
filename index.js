@@ -53,6 +53,8 @@ const verifyToken = (req, res, next)=> {
     if(err){
       return res.status(401).send({message:'unauthorized access'})
     }
+    req.user = decoded ; 
+    next()
   })
 }
 
@@ -121,6 +123,9 @@ async function run() {
     app.get('/queries/:email', logger , verifyToken , async (req, res) => {
       const email = req.params.email
       // console.log('queries' , req.cookies)
+      if(req.user.email !== email){
+        return res.status(403).send({message: 'forbidden access'})
+      }
       const query = { userEmail: email }
       const result = await queryCollection.find(query).sort({ _id: -1 }).toArray()
       res.send(result)
@@ -202,6 +207,17 @@ async function run() {
       const recommend = req.body;
       console.log(recommend)
       const result = await recommendCollection.insertOne(recommend)
+      //update recommend count in query collection
+  
+
+    const updateDoc = {
+       $inc: {recommendation : 1 } ,
+    }
+    const recommendationQuery = {_id : new ObjectId(recommend.queryId)} 
+
+    const updateRecommend = await queryCollection.updateOne(recommendationQuery , updateDoc)
+    console.log(updateRecommend)
+
       res.send(result)
     })
 
