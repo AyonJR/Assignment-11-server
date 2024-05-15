@@ -11,6 +11,8 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
+      "https://final-assignment-11.web.app",
+      "https://final-assignment-11.firebaseapp.com"
 
     ],
     credentials: true,
@@ -59,7 +61,12 @@ const verifyToken = (req, res, next)=> {
 }
 
 
+const cookieOption = {
 
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+} ;
 
 
 
@@ -81,12 +88,7 @@ async function run() {
         expiresIn: '7d'
       })
 
-      res.cookie('token', token, {
-
-        httpOnly: true,
-        secure: true,
-        sameSite: "none"
-      })
+      res.cookie('token', token, cookieOption )
       res.send({ success: true })
     })
 
@@ -96,7 +98,7 @@ async function run() {
  app.post('/logout' , async(req ,res)=> {
    const user = req.body 
    console.log('logging out' , user)
-   res.clearCookie('token' , {maxAge:0}).send({success:true})
+   res.clearCookie('token' , {...cookieOption , maxAge:0}).send({success:true})
  })
 
 
@@ -141,6 +143,50 @@ async function run() {
 
     //My recommendations 
 
+    // ----------------------------------------------------------------
+
+    // app.get('/allRecommendations/:queryId' , async(req,res)=>{
+    //   const id = req.params.queryId
+    //   console.log(id)
+    //    const query = { queryId : id}
+    //    const result = await recommendCollection.find(query).toArray()
+    //    console.log(result)
+    //    res.send(result)
+    // })
+
+  //   app.get('/allRecommendations/:queryId', async (req, res) => {
+  //     try {
+  //         const queryId = req.params.queryId;
+  //         const query = { queryId: new ObjectId(queryId) };
+  //         const result = await recommendCollection.find(query).toArray();
+  //         console.log(result);
+  //         res.send(result);
+  //     } catch (error) {
+  //         console.error('Error fetching recommendations:', error);
+  //         res.status(500).json({ error: 'Internal server error' });
+  //     }
+  // });
+  
+
+
+  app.get('/allRecommendations/:queryId', async (req, res) => {
+    const id = req.params.queryId;
+    console.log(id);
+    const query = { queryId: id };
+    const result = await recommendCollection.find(query).toArray();
+    console.log(result);
+    res.send(result);
+});
+
+
+
+
+
+
+
+
+
+    // -----------------------------------------------------------------
     app.get('/recommendations/:email', async (req, res) => {
       const email = req.params.email
       const query = { loggedInUserEmail: email }
@@ -164,6 +210,23 @@ async function run() {
       const result = await queryCollection.findOne(query)
       res.send(result)
     })
+
+   // get operation for all recommendations
+  
+
+
+
+
+   // show the recommendations for that query
+
+  //  app.get('/recommendations/:id', async (req, res) => {
+  //   const id = req.params.id
+  //   const query = { _id: new ObjectId(id) }
+  //   const result = await recommendCollection.find(query).sort({ _id: -1 }).toArray()
+  //   res.send(result)
+  // })
+
+
 
 
     //PUT operation for update
@@ -207,16 +270,15 @@ async function run() {
       const recommend = req.body;
       console.log(recommend)
       const result = await recommendCollection.insertOne(recommend)
+    
       //update recommend count in query collection
-  
-
-    const updateDoc = {
-       $inc: {recommendation : 1 } ,
+       const updateDoc = {
+       $inc: {recommendation : 1  } ,
     }
-    const recommendationQuery = {_id : new ObjectId(recommend.queryId)} 
+    const recommendationQuery =  { _id : new ObjectId(recommend.queryId)} 
 
-    const updateRecommend = await queryCollection.updateOne(recommendationQuery , updateDoc)
-    console.log(updateRecommend)
+    const updateRecommendOne = await queryCollection.updateOne(  recommendationQuery , updateDoc)
+    console.log(updateRecommendOne)
 
       res.send(result)
     })
@@ -225,13 +287,43 @@ async function run() {
 
     //delete my recommendations
 
-    app.delete('/recommendations/:id', async (req, res) => {
-      const id = req.params.id
-      const query = { _id: new ObjectId(id) }
-      const result = await recommendCollection.deleteOne(query)
-      res.send(result)
-    })
 
+    app.delete('/recommendations/:id', async (req, res) => {
+      try {
+        // const recommend = req.body;
+          
+          const id = req.params.id;
+          // const queryId = req.params.queryId ;
+          console.log(req.body , 1) 
+          const query = { _id: new ObjectId(id) };
+          
+          const recommendation = await recommendCollection.findOne(query);
+          console.log(recommendation , 2)
+
+
+          // Delete the recommendation
+           const result = await recommendCollection.deleteOne(query);
+          // console.log(result);
+          const updateDoc = {
+            $inc: {recommendation : -1 } ,
+         }
+         const recommendationQuery = { _id : new ObjectId(recommendation.queryId)} 
+     
+         const updateRecommendTwo = await queryCollection.updateOne( recommendationQuery , updateDoc)
+         console.log(updateRecommendTwo , 3)
+  // ---------------------------------------------------
+          // Decrement the recommendation count in the corresponding query
+         
+  
+          res.send(result);
+          // res.send(updateRecommend)
+
+      } catch (error) {
+          console.error(error);
+          res.status(500).json({ error: 'Internal server error' });
+      }
+  });
+  
 
 
     //delete myQuery 
